@@ -31,128 +31,116 @@
 package cc.calliope.mini.adapter;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import cc.calliope.mini.ScannerActivity;
 import cc.calliope.mini.R;
+import cc.calliope.mini.databinding.DeviceItemBinding;
 import cc.calliope.mini.viewmodels.ScannerLiveData;
-//import cc.calliope.mini.R;
 
-@SuppressWarnings("unused")
 public class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.ViewHolder> {
-	private final ScannerActivity mContext;
-	private final List<ExtendedBluetoothDevice> mDevices;
-	private OnItemClickListener mOnItemClickListener;
+    private final List<ExtendedBluetoothDevice> mDevices;
+    private OnItemClickListener mOnItemClickListener;
 
-	@FunctionalInterface
-	public interface OnItemClickListener {
-		void onItemClick(final ExtendedBluetoothDevice device);
-	}
+    @FunctionalInterface
+    public interface OnItemClickListener {
+        void onItemClick(final ExtendedBluetoothDevice device);
+    }
 
-	public void setOnItemClickListener(final Context context) {
-		mOnItemClickListener = (OnItemClickListener) context;
-	}
+    public void setOnItemClickListener(final Context context) {
+        mOnItemClickListener = (OnItemClickListener) context;
+    }
 
-	public DevicesAdapter(final ScannerActivity activity, final ScannerLiveData scannerLiveData) {
-		mContext = activity;
-		mDevices = scannerLiveData.getDevices();
-		scannerLiveData.observe(activity, devices -> {
-			final Integer i = devices.getUpdatedDeviceIndex();
-			if (i != null)
-				notifyItemChanged(i);
-			else
-				notifyDataSetChanged();
-		});
-	}
+    public DevicesAdapter(final ScannerActivity activity, final ScannerLiveData scannerLiveData) {
+        mDevices = scannerLiveData.getDevices();
+        scannerLiveData.observe(activity, devices -> {
+            final Integer i = devices.getUpdatedDeviceIndex();
+            if (i != null)
+                notifyItemChanged(i);
+            else
+                notifyDataSetChanged();
+        });
+    }
 
-//	public int getDevicePattern(char character) {
-//
-//		if ("ZU".contains(String.valueOf(character)))
-//		return R.drawable.pattern1;
-//		if ("VO".contains(String.valueOf(character)))
-//			return R.drawable.pattern2;
-//		if ("GI".contains(String.valueOf(character)))
-//		return R.drawable.pattern3;
-//		if ("PE".contains(String.valueOf(character)))
-//			return R.drawable.pattern4;
-//		if ("TA".contains(String.valueOf(character)))
-//			return R.drawable.pattern5;
-//		else
-//			return R.drawable.pattern0;
-//	}
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return new ViewHolder(DeviceItemBinding.inflate(LayoutInflater.from(parent.getContext()),
+                parent, false));
+    }
 
-	@NonNull
-	@Override
-	public ViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, final int viewType) {
-		final View layoutView = LayoutInflater.from(mContext).inflate(R.layout.device_item, parent, false);
-		return new ViewHolder(layoutView);
-	}
+    @Override
+    public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
+        final ExtendedBluetoothDevice device = mDevices.get(position);
+        final String deviceName = device.getName();
+        final String devicePattern = device.getPattern();
 
-	@Override
-	public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
-		final ExtendedBluetoothDevice device = mDevices.get(position);
-		final String deviceName = device.getName();
-		final String devicePattern = device.getPattern();
+        if (!TextUtils.isEmpty(deviceName))
+            holder.deviceName.setText(deviceName);
+        else
+            holder.deviceName.setText(R.string.unknown_device);
+        holder.deviceAddress.setText(device.getAddress());
+        final int rssiPercent = (int) (100.0f * (127.0f + device.getRssi()) / (127.0f + 20.0f));
+        holder.rssi.setImageLevel(rssiPercent);
+        holder.pattern1.setImageResource(device.getDevicePattern(0));
+        holder.pattern2.setImageResource(device.getDevicePattern(1));
+        holder.pattern3.setImageResource(device.getDevicePattern(2));
+        holder.pattern4.setImageResource(device.getDevicePattern(3));
+        holder.pattern5.setImageResource(device.getDevicePattern(4));
+    }
 
-		if (!TextUtils.isEmpty(deviceName))
-			holder.deviceName.setText(deviceName);
-		else
-			holder.deviceName.setText(R.string.unknown_device);
-		holder.deviceAddress.setText(device.getAddress());
-		final int rssiPercent = (int) (100.0f * (127.0f + device.getRssi()) / (127.0f + 20.0f));
-		holder.rssi.setImageLevel(rssiPercent);
-		holder.pattern1.setImageResource(device.getDevicePattern(0));
-		holder.pattern2.setImageResource(device.getDevicePattern(1));
-		holder.pattern3.setImageResource(device.getDevicePattern(2));
-		holder.pattern4.setImageResource(device.getDevicePattern(3));
-		holder.pattern5.setImageResource(device.getDevicePattern(4));
-	}
+    @Override
+    public long getItemId(final int position) {
+        return position;
+    }
 
-	@Override
-	public long getItemId(final int position) {
-		return position;
-	}
+    @Override
+    public int getItemCount() {
+        return mDevices.size();
+    }
 
-	@Override
-	public int getItemCount() {
-		return mDevices.size();
-	}
-
-	public boolean isEmpty() {
-		return getItemCount() == 0;
-	}
+    public boolean isEmpty() {
+        return getItemCount() == 0;
+    }
 
 
-	final class ViewHolder extends RecyclerView.ViewHolder {
-		@BindView(R.id.device_address) TextView deviceAddress;
-		@BindView(R.id.device_name) TextView deviceName;
-		@BindView(R.id.rssi) ImageView rssi;
-		@BindView(R.id.pattern1) ImageView pattern1;
-		@BindView(R.id.pattern2) ImageView pattern2;
-		@BindView(R.id.pattern3) ImageView pattern3;
-		@BindView(R.id.pattern4) ImageView pattern4;
-		@BindView(R.id.pattern5) ImageView pattern5;
+    final class ViewHolder extends RecyclerView.ViewHolder {
+        TextView deviceAddress;
+        TextView deviceName;
+        ImageView rssi;
+        ImageView pattern1;
+        ImageView pattern2;
+        ImageView pattern3;
+        ImageView pattern4;
+        ImageView pattern5;
 
-		private ViewHolder(final View view) {
-			super(view);
-			ButterKnife.bind(this, view);
+        private ViewHolder(DeviceItemBinding itemBinding) {
+            super(itemBinding.getRoot());
 
-			view.findViewById(R.id.device_container).setOnClickListener(v -> {
-				if (mOnItemClickListener != null) {
-					mOnItemClickListener.onItemClick(mDevices.get(getAdapterPosition()));
-				}
-			});
-		}
-	}
+            deviceAddress = itemBinding.deviceAddress;
+            deviceName = itemBinding.deviceName;
+            rssi = itemBinding.rssi;
+            pattern1 = itemBinding.include3.pattern1;
+            pattern2 = itemBinding.include3.pattern2;
+            pattern3 = itemBinding.include3.pattern3;
+            pattern4 = itemBinding.include3.pattern4;
+            pattern5 = itemBinding.include3.pattern5;
+
+            itemBinding.deviceContainer.setOnClickListener(view -> {
+                if (mOnItemClickListener != null) {
+                    mOnItemClickListener.onItemClick(mDevices.get(getAdapterPosition()));
+                }
+            });
+        }
+    }
 }

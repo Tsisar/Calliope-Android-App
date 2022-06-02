@@ -83,6 +83,7 @@
 			android:layout_height="wrap_content"
 			app:fontFamily="@font/roboto_mono"
 			android:layout_gravity="center_horizontal"
-			android:text="@string/mini_guide_location_action"/>
+			android:text="@string/mini_guide_location_action"
+            android:onClick="onEnableLocationClicked"/>
 	</LinearLayout>
 </LinearLayout>

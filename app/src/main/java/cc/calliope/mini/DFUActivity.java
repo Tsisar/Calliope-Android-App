@@ -1,14 +1,18 @@
 package cc.calliope.mini;
 
 import androidx.lifecycle.ViewModelProviders;
+
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -17,7 +21,9 @@ import java.lang.reflect.Method;
 import cc.calliope.mini.adapter.ExtendedBluetoothDevice;
 import cc.calliope.mini.service.DfuService;
 import cc.calliope.mini.viewmodels.BlinkyViewModel;
+
 import no.nordicsemi.android.error.GattError;
+
 
 public class DFUActivity extends AppCompatActivity {
 
@@ -25,17 +31,20 @@ public class DFUActivity extends AppCompatActivity {
     private DFUResultReceiver dfuResultReceiver;
     private static final String TAG = DFUActivity.class.getSimpleName();
 
+    TextView mUploadPercentageView;
+
     private int mActivityState;
 
     private String m_BinSizeStats = "0";
     private String m_MicroBitFirmware = "0.0";
     private long starttime;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dfu);
+
+        mUploadPercentageView = findViewById(R.id.timerText);
 
         final Intent intent = getIntent();
         final ExtendedBluetoothDevice device = intent.getParcelableExtra("cc.calliope.mini.EXTRA_DEVICE");
@@ -57,11 +66,10 @@ public class DFUActivity extends AppCompatActivity {
 //        deviceInfo.setText("warte auf Mini... (A+B+Reset)");
 //        viewModel.isDeviceReady().observe(this, deviceReady -> {
 //            viewModel.startDFU();
-            initiateFlashing();
+        initiateFlashing();
 //        });
 
     }
-
 
 
     private void pairDevice(BluetoothDevice device) {
@@ -98,7 +106,7 @@ public class DFUActivity extends AppCompatActivity {
      * registers callbacks requisite for flashing and starts flashing.</p>
      */
     protected void initiateFlashing() {
-        if(dfuResultReceiver != null) {
+        if (dfuResultReceiver != null) {
             LocalBroadcastManager.getInstance(DFUActivity.this).unregisterReceiver(dfuResultReceiver);
             dfuResultReceiver = null;
         }
@@ -112,7 +120,7 @@ public class DFUActivity extends AppCompatActivity {
      */
     private void setConnectedDeviceText() {
         // TODO
-            return;
+        return;
     }
 
 
@@ -153,11 +161,11 @@ public class DFUActivity extends AppCompatActivity {
         service.putExtra(DfuService.EXTRA_KEEP_BOND, false);
         service.putExtra(DfuService.INTENT_REQUESTED_PHASE, 2);
 
-        Log.i("DFUExtra", "mAddress: "+device.getAddress());
-        Log.i("DFUExtra", "mPattern: "+device.getName());
-        Log.i("DFUExtra", "mPairingCode: "+0);
-        Log.i("DFUExtra", "MIME_TYPE_OCTET_STREAM: "+DfuService.MIME_TYPE_OCTET_STREAM);
-        Log.i("DFUExtra", "filePath: "+file);
+        Log.i("DFUExtra", "mAddress: " + device.getAddress());
+        Log.i("DFUExtra", "mPattern: " + device.getName());
+        Log.i("DFUExtra", "mPairingCode: " + 0);
+        Log.i("DFUExtra", "MIME_TYPE_OCTET_STREAM: " + DfuService.MIME_TYPE_OCTET_STREAM);
+        Log.i("DFUExtra", "filePath: " + file);
 
         Log.i("DFUExtra", "Start Flashing");
 
@@ -178,7 +186,6 @@ public class DFUActivity extends AppCompatActivity {
 
         LocalBroadcastManager.getInstance(DFUActivity.this).registerReceiver(dfuResultReceiver, filter);
     }
-
 
 
     /**
@@ -207,23 +214,23 @@ public class DFUActivity extends AppCompatActivity {
             final TextView timerText = findViewById(R.id.timerText);
             String message = "Broadcast intent detected " + intent.getAction();
 //            logi("DFUResultReceiver.onReceive :: " + message);
-            Log.e("DFUResultReceiver", " "+intent.getAction());
-            if(intent.getAction().equals(DfuService.BROADCAST_LOG) || intent.getAction().equals(DfuService.BROADCAST_ERROR)) {
+            Log.e("DFUResultReceiver", " " + intent.getAction());
+            if (intent.getAction().equals(DfuService.BROADCAST_LOG) || intent.getAction().equals(DfuService.BROADCAST_ERROR)) {
                 String state = intent.getStringExtra(DfuService.EXTRA_DATA);
-                Log.w("DFULogStatus", " "+state);
-            } else if(intent.getAction().equals(DfuService.BROADCAST_PROGRESS)) {
+                Log.w("DFULogStatus", " " + state);
+            } else if (intent.getAction().equals(DfuService.BROADCAST_PROGRESS)) {
 
                 int state = intent.getIntExtra(DfuService.EXTRA_DATA, 0);
-                Log.w("DFUResultStatus", " "+state);
+                Log.w("DFUResultStatus", " " + state);
 
-                if(starttime == 0)
+                if (starttime == 0)
                     starttime = System.currentTimeMillis();
                 millis = System.currentTimeMillis() - starttime;
 
 
                 timerText.setText(millis + "");
 
-                if(millis >= 20000 && state < 0 && state != -5) {
+                if (millis >= 20000 && state < 0 && state != -5) {
 //                    timerText.setText(millis + " RESTART"); // TODO Restart activity OR dfu if it hängs
 //                    this.recreate();
 //                    Intent intentX = getIntent();
@@ -231,15 +238,15 @@ public class DFUActivity extends AppCompatActivity {
 //                    startActivity(intentX);
                 }
 
-                if(state < 0) {
+                if (state < 0) {
 //                    deviceInfo.setText("Initialisiere... "+state);
                     timerText.setText(R.string.info_text_uploading_init);
 
-                    switch(state) {
+                    switch (state) {
                         case DfuService.PROGRESS_STARTING:
                             break;
                         case DfuService.PROGRESS_COMPLETED:
-                            if(!isCompleted) {
+                            if (!isCompleted) {
                                 dfuResultReceiver = null;
                             }
                             Log.e("OWN", "Fertig");
@@ -255,7 +262,7 @@ public class DFUActivity extends AppCompatActivity {
                             break;
 
                         case DfuService.PROGRESS_CONNECTING:
-                            if((!inInit) && (!isCompleted)) {
+                            if ((!inInit) && (!isCompleted)) {
 
 //                                countOfReconnecting = 0;
                             }
@@ -281,38 +288,38 @@ public class DFUActivity extends AppCompatActivity {
                             break;
 
                     }
-                } else if((state > 0) && (state < 100)) {
-                    deviceInfo.setText(state+"%");
+                } else if ((state > 0) && (state < 100)) {
+                    deviceInfo.setText(state + "%");
                     timerText.setText(R.string.info_text_uploading);
-                    if(!inProgress) {
+                    if (!inProgress) {
 
                         inProgress = true;
 
                     }
 
                 }
-            } else if(intent.getAction().equals(DfuService.BROADCAST_ERROR)) {
+            } else if (intent.getAction().equals(DfuService.BROADCAST_ERROR)) {
                 deviceInfo.setText("Fehler!");
                 int errorCode = intent.getIntExtra(DfuService.EXTRA_DATA, 0);
 
-                if(errorCode == DfuService.ERROR_FILE_INVALID) {
+                if (errorCode == DfuService.ERROR_FILE_INVALID) {
 //                    notAValidFlashHexFile = true;
                 }
 
                 String error_message = GattError.parse(errorCode);
 
-                if(errorCode == DfuService.ERROR_FILE_INVALID) {
+                if (errorCode == DfuService.ERROR_FILE_INVALID) {
 //                    error_message += getString(R.string.reset_microbit_because_of_hex_file_wrong);
                 }
-                deviceInfo.setText("Fehler! "+error_message);
+                deviceInfo.setText("Fehler! " + error_message);
                 dfuResultReceiver = null;
 
 //                removeReconnectionRunnable();
-            } else if(intent.getAction().equals(DfuService.BROADCAST_LOG)) {
+            } else if (intent.getAction().equals(DfuService.BROADCAST_LOG)) {
                 //Only used for Stats at the moment
                 String data;
                 int logLevel = intent.getIntExtra(DfuService.EXTRA_LOG_LEVEL, 0);
-                switch(logLevel) {
+                switch (logLevel) {
                     case DfuService.LOG_LEVEL_BINARY_SIZE:
                         data = intent.getStringExtra(DfuService.EXTRA_DATA);
                         m_BinSizeStats = data;
@@ -326,5 +333,4 @@ public class DFUActivity extends AppCompatActivity {
         }
 
     }
-
 }

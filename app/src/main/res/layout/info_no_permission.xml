@@ -70,7 +70,8 @@
 		android:layout_height="wrap_content"
 		android:layout_gravity="center_horizontal"
 		app:fontFamily="@font/roboto_mono"
-		android:text="@string/location_permission_action"/>
+		android:text="@string/location_permission_action"
+        android:onClick="onGrantLocationPermissionClicked"/>
 
 	<Button
 		android:id="@+id/action_permission_settings"
@@ -80,5 +81,6 @@
 		android:layout_gravity="center_horizontal"
 		android:text="@string/location_permission_settings"
 		app:fontFamily="@font/roboto_mono"
-		android:visibility="gone"/>
+		android:visibility="gone"
+        android:onClick="onPermissionSettingsClicked"/>
 </LinearLayout>
