@@ -33,7 +33,7 @@ package cc.calliope.mini;
 import android.Manifest;
 
 import androidx.annotation.RequiresApi;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
@@ -83,7 +83,7 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
     private ScannerViewModel mScannerViewModel;
     private AnimationDrawable pairAnimation;
 
-    ActivityScannerBinding binding;
+    private ActivityScannerBinding binding;
 
     View mScanningView;
     View mEmptyView;
@@ -113,9 +113,8 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
         mNoBluetoothView = binding.bluetoothOff.getRoot();
         mPairAnimation = binding.pairAnimationLayout;
 
-
         // Create view model containing utility methods for scanning
-        mScannerViewModel = ViewModelProviders.of(this).get(ScannerViewModel.class);
+        mScannerViewModel = new ViewModelProvider(this).get(ScannerViewModel.class);
         mScannerViewModel.getScannerState().observe(this, this::startScan);
 
         // Configure the recycler view

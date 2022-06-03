@@ -31,18 +31,12 @@
 package cc.calliope.mini.adapter;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
-
 import java.util.List;
-
 import cc.calliope.mini.ScannerActivity;
 import cc.calliope.mini.R;
 import cc.calliope.mini.databinding.DeviceItemBinding;
@@ -83,20 +77,19 @@ public class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.ViewHold
     public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
         final ExtendedBluetoothDevice device = mDevices.get(position);
         final String deviceName = device.getName();
-        final String devicePattern = device.getPattern();
+        final int rssiPercent = (int) (100.0f * (127.0f + device.getRssi()) / (127.0f + 20.0f));
 
         if (!TextUtils.isEmpty(deviceName))
-            holder.deviceName.setText(deviceName);
+            holder.itemBinding.deviceName.setText(deviceName);
         else
-            holder.deviceName.setText(R.string.unknown_device);
-        holder.deviceAddress.setText(device.getAddress());
-        final int rssiPercent = (int) (100.0f * (127.0f + device.getRssi()) / (127.0f + 20.0f));
-        holder.rssi.setImageLevel(rssiPercent);
-        holder.pattern1.setImageResource(device.getDevicePattern(0));
-        holder.pattern2.setImageResource(device.getDevicePattern(1));
-        holder.pattern3.setImageResource(device.getDevicePattern(2));
-        holder.pattern4.setImageResource(device.getDevicePattern(3));
-        holder.pattern5.setImageResource(device.getDevicePattern(4));
+            holder.itemBinding.deviceName.setText(R.string.unknown_device);
+        holder.itemBinding.deviceAddress.setText(device.getAddress());
+        holder.itemBinding.rssi.setImageLevel(rssiPercent);
+        holder.itemBinding.include3.pattern1.setImageResource(device.getDevicePattern(0));
+        holder.itemBinding.include3.pattern2.setImageResource(device.getDevicePattern(1));
+        holder.itemBinding.include3.pattern3.setImageResource(device.getDevicePattern(2));
+        holder.itemBinding.include3.pattern4.setImageResource(device.getDevicePattern(3));
+        holder.itemBinding.include3.pattern5.setImageResource(device.getDevicePattern(4));
     }
 
     @Override
@@ -113,32 +106,16 @@ public class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.ViewHold
         return getItemCount() == 0;
     }
 
-
     final class ViewHolder extends RecyclerView.ViewHolder {
-        TextView deviceAddress;
-        TextView deviceName;
-        ImageView rssi;
-        ImageView pattern1;
-        ImageView pattern2;
-        ImageView pattern3;
-        ImageView pattern4;
-        ImageView pattern5;
+        DeviceItemBinding itemBinding;
 
         private ViewHolder(DeviceItemBinding itemBinding) {
             super(itemBinding.getRoot());
-
-            deviceAddress = itemBinding.deviceAddress;
-            deviceName = itemBinding.deviceName;
-            rssi = itemBinding.rssi;
-            pattern1 = itemBinding.include3.pattern1;
-            pattern2 = itemBinding.include3.pattern2;
-            pattern3 = itemBinding.include3.pattern3;
-            pattern4 = itemBinding.include3.pattern4;
-            pattern5 = itemBinding.include3.pattern5;
+            this.itemBinding = itemBinding;
 
             itemBinding.deviceContainer.setOnClickListener(view -> {
                 if (mOnItemClickListener != null) {
-                    mOnItemClickListener.onItemClick(mDevices.get(getAdapterPosition()));
+                    mOnItemClickListener.onItemClick(mDevices.get(getBindingAdapterPosition()));
                 }
             });
         }
