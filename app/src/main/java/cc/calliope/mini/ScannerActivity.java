@@ -51,12 +51,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+
 
 import cc.calliope.mini.adapter.DevicesAdapter;
 import cc.calliope.mini.adapter.ExtendedBluetoothDevice;
@@ -118,18 +118,19 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
         mScannerViewModel.getScannerState().observe(this, this::startScan);
 
         // Configure the recycler view
-        final RecyclerView recyclerView = findViewById(R.id.recycler_view_ble_devices);
+        final RecyclerView recyclerView = binding.recyclerViewBleDevices;
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         final DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(dividerItemDecoration);
-        ((SimpleItemAnimator) recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
+        recyclerView.setItemAnimator(new DefaultItemAnimatorNoChange());
+//        ((SimpleItemAnimator) recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
 
         final DevicesAdapter adapter = new DevicesAdapter(this, mScannerViewModel.getScannerState());
         adapter.setOnItemClickListener(this);
         recyclerView.setAdapter(adapter);
 
-        ImageView rocketImage = findViewById(R.id.pair_animation);
+        ImageView rocketImage = binding.pairAnimation;
         rocketImage.setBackgroundResource(R.drawable.pair_animation);
         pairAnimation = (AnimationDrawable) rocketImage.getBackground();
     }
