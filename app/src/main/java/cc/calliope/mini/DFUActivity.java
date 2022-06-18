@@ -130,10 +130,10 @@ public class DFUActivity extends AppCompatActivity {
 
         final DfuServiceInitiator starter = new DfuServiceInitiator(device.getAddress())
                 .setDeviceName(device.getName())
-                .setMbrSize(112785)
+                .setMbrSize(0x18000)
                 .setKeepBond(false);
 
-        starter.setBinOrHex(DfuBaseService.TYPE_APPLICATION, null, file).setInitFile(null, null);
+        starter.setBinOrHex(DfuBaseService.TYPE_APPLICATION, file);
 
         starter.start(this, DfuService.class);
     }
