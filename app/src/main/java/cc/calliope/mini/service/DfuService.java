@@ -46,50 +46,50 @@ public class DfuService extends DfuBaseService {
     protected BluetoothGatt connect(@NonNull final String address) {
         BluetoothGatt gatt = super.connect(address);
 
-        //For Stats purpose only
-        {
-            BluetoothGattService deviceService = gatt.getService(DEVICE_INFORMATION_SERVICE_UUID);
-            if (deviceService != null) {
-                BluetoothGattCharacteristic firmwareCharacteristic = deviceService.getCharacteristic(FIRMWARE_REVISION_UUID);
-                if (firmwareCharacteristic != null) {
-                    gatt.readCharacteristic(firmwareCharacteristic);
-                    waitFor(1000);
-                    String firmware = firmwareCharacteristic.getStringValue(0);
-                    logi("Firmware version String = " + firmware);
-                } else {
-                    logi("Error Cannot find FIRMWARE_REVISION_UUID");
-                }
-            } else {
-                logi("Error Cannot find DEVICE_INFORMATION_SERVICE_UUID");
-            }
-        }//For Stats purpose only Ends
+//        //For Stats purpose only
+//        {
+//            BluetoothGattService deviceService = gatt.getService(DEVICE_INFORMATION_SERVICE_UUID);
+//            if (deviceService != null) {
+//                BluetoothGattCharacteristic firmwareCharacteristic = deviceService.getCharacteristic(FIRMWARE_REVISION_UUID);
+//                if (firmwareCharacteristic != null) {
+//                    gatt.readCharacteristic(firmwareCharacteristic);
+//                    waitFor(1000);
+//                    String firmware = firmwareCharacteristic.getStringValue(0);
+//                    logi("Firmware version String = " + firmware);
+//                } else {
+//                    logi("Error Cannot find FIRMWARE_REVISION_UUID");
+//                }
+//            } else {
+//                logi("Error Cannot find DEVICE_INFORMATION_SERVICE_UUID");
+//            }
+//        }//For Stats purpose only Ends
 
-//        if (firstRun) {
-//            firstRun = false;
-//            BluetoothGattService fps = gatt.getService(MINI_FLASH_SERVICE_UUID);
-//            if (fps == null) {
-//                logi("Error Cannot find MINI_FLASH_SERVICE_UUID");
-//                terminateConnection(gatt, 0);
-//                return gatt;
-//            }
-//
-//            final BluetoothGattCharacteristic sfpc1 = fps.getCharacteristic(MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID);
-//            if (sfpc1 == null) {
-//                logi("Error Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
-//                terminateConnection(gatt, 0);
-//                return gatt;
-//            }
-//
-//            sfpc1.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-//            try {
-//                logi("Writing Flash Command ....");
-//                gatt.writeCharacteristic(sfpc1);
-//                waitFor(1000);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                loge(e.getMessage(), e);
-//            }
-//        }
+        if (firstRun) {
+            firstRun = false;
+            BluetoothGattService fps = gatt.getService(MINI_FLASH_SERVICE_UUID);
+            if (fps == null) {
+                logi("Error Cannot find MINI_FLASH_SERVICE_UUID");
+                terminateConnection(gatt, 0);
+                return gatt;
+            }
+
+            final BluetoothGattCharacteristic sfpc1 = fps.getCharacteristic(MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID);
+            if (sfpc1 == null) {
+                logi("Error Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
+                terminateConnection(gatt, 0);
+                return gatt;
+            }
+
+            sfpc1.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            try {
+                logi("Writing Flash Command ....");
+                gatt.writeCharacteristic(sfpc1);
+                waitFor(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+                loge(e.getMessage(), e);
+            }
+        }
         return gatt;
     }
 
