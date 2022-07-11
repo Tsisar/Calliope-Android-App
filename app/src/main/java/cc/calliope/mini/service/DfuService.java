@@ -1,17 +1,34 @@
 package cc.calliope.mini.service;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.os.Build;
 import android.util.Log;
 
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import cc.calliope.mini.BuildConfig;
+import cc.calliope.mini.R;
 import cc.calliope.mini.ui.activity.NotificationActivity;
 import no.nordicsemi.android.dfu.DfuBaseService;
+import no.nordicsemi.android.dfu.DfuServiceInitiator;
+
+import static androidx.core.app.NotificationCompat.PRIORITY_MIN;
 
 public class DfuService extends DfuBaseService {
 
@@ -35,6 +52,36 @@ public class DfuService extends DfuBaseService {
     @Override
     public void onCreate() {
         super.onCreate();
+        // Enable Notification Channel for Android OREO
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            DfuServiceInitiator.createDfuNotificationChannel(getApplicationContext());
+        }
+
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+//            startMyOwnForeground();
+//        else
+//            startForeground(NOTIFICATION_ID, new Notification());
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void startMyOwnForeground() {
+        String channelName = "My Background Service";
+        NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_DFU, channelName, NotificationManager.IMPORTANCE_NONE);
+        channel.setLightColor(Color.BLUE);
+        channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        assert manager != null;
+        manager.createNotificationChannel(channel);
+
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_DFU);
+        Notification notification = notificationBuilder.setOngoing(true)
+                .setSmallIcon(R.drawable.ic_mini_app_icon)
+                .setContentTitle("App is running in background")
+                .setPriority(NotificationManager.IMPORTANCE_MAX)
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .build();
+        startForeground(NOTIFICATION_ID, notification);
     }
 
     @Override
@@ -43,10 +90,15 @@ public class DfuService extends DfuBaseService {
     }
 
     @Override
+    protected void updateForegroundNotification(@NonNull final NotificationCompat.Builder builder) {
+        loge("updateForegroundNotification: " + builder);
+    }
+
+    @Override
     protected BluetoothGatt connect(@NonNull final String address) {
         BluetoothGatt gatt = super.connect(address);
 
-//        //For Stats purpose only
+        //For Stats purpose only
 //        {
 //            BluetoothGattService deviceService = gatt.getService(DEVICE_INFORMATION_SERVICE_UUID);
 //            if (deviceService != null) {
@@ -55,14 +107,15 @@ public class DfuService extends DfuBaseService {
 //                    gatt.readCharacteristic(firmwareCharacteristic);
 //                    waitFor(1000);
 //                    String firmware = firmwareCharacteristic.getStringValue(0);
-//                    logi("Firmware version String = " + firmware);
+//                    loge("Firmware version String = " + firmware);
 //                } else {
-//                    logi("Error Cannot find FIRMWARE_REVISION_UUID");
+//                    loge("Error Cannot find FIRMWARE_REVISION_UUID");
 //                }
 //            } else {
-//                logi("Error Cannot find DEVICE_INFORMATION_SERVICE_UUID");
+//                loge("Error Cannot find DEVICE_INFORMATION_SERVICE_UUID");
 //            }
-//        }//For Stats purpose only Ends
+//        }
+        //For Stats purpose only Ends
 
         if (firstRun) {
             firstRun = false;
@@ -83,13 +136,27 @@ public class DfuService extends DfuBaseService {
             sfpc1.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             try {
                 logi("Writing Flash Command ....");
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    loge("ERROR BLUETOOTH_CONNECT permissions DENIED!!!");
+                }
+                //TODO do something with connection state
                 gatt.writeCharacteristic(sfpc1);
+                loge("Start wait");
                 waitFor(1000);
+                loge("Stop wait");
             } catch (Exception e) {
                 e.printStackTrace();
                 loge(e.getMessage(), e);
             }
         }
+
         return gatt;
     }
 
@@ -99,6 +166,12 @@ public class DfuService extends DfuBaseService {
         // Library's BuildConfig in current version of Android Studio is always set to DEBUG=false, so
         // make sure you return true or your.app.BuildConfig.DEBUG here.
         return BuildConfig.DEBUG;
+    }
+
+    private void loge(final String message) {
+        if (DEBUG) {
+            Log.e(TAG, "### " + Thread.currentThread().getId() + " # " + message);
+        }
     }
 
     private void loge(final String message, final Throwable e) {
