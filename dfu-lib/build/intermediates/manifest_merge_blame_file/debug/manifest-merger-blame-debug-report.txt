@@ -1,0 +1,62 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="no.nordicsemi.android.dfu" >
+4    <!--
+5	Apps that target Android 9 (API level 28) or higher and use foreground services must request
+6	the FOREGROUND_SERVICE permission, as shown in the following code snippet.
+7	This is a normal permission, so the system automatically grants it to the requesting app.
+8
+9	As foreground service may be disabled, this permission is commented out. Add it to your app
+10	if needed.
+11    -->
+12<!-- 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> -->
+13    <uses-sdk
+14        android:minSdkVersion="18"
+14-->C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+15        android:targetSdkVersion="32" />
+15-->C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+16
+17    <!--
+18         Bluetooth permission is required on Android 4.3 - 11 in order to communicate with
+19         Bluetooth LE devices.
+20    -->
+21    <uses-permission
+21-->C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:8:2-92
+22        android:name="android.permission.BLUETOOTH"
+22-->C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:8:19-62
+23        android:maxSdkVersion="30" />
+23-->C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:8:63-89
+24
+25    <!--
+26	 Bluetooth Admin permission is required on Android 4.3 - 11 in order to scan for
+27	 Bluetooth LE devices, create and remove pairing.
+28    -->
+29    <uses-permission
+29-->C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:14:2-98
+30        android:name="android.permission.BLUETOOTH_ADMIN"
+30-->C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:14:19-68
+31        android:maxSdkVersion="30" />
+31-->C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:14:69-95
+32
+33    <!--
+34     On Android 12 new set of Bluetooth permissions were added. BLUETOOTH_SCAN permission is
+35     needed to scan for Bluetooth LE devices.
+36
+37     This permission is not added here, as scanning is only required in some cases. If needed,
+38     add this permission to your app's Android Manifest.
+39
+40     Also, consider adding "neverForLocation" flag if scanning for beacons is nor required.
+41     With this flag set, the Fine Location permission will not be required.
+42    -->
+43<!--      <uses-permission android:name="android.permission.BLUETOOTH_SCAN" /> -->
+44
+45
+46    <!--
+47	 This permission is required in order to connect to a Bluetooth LE device on Android 12
+48	 onwards.
+49    -->
+50    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+50-->C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:34:2-73
+50-->C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:34:19-70
+51
+52</manifest>

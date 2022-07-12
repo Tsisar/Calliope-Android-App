@@ -1,0 +1,41 @@
+-- Merging decision tree log ---
+manifest
+ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:1:1-47:12
+INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:1:1-47:12
+INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:1:1-47:12
+	package
+		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:2:2-37
+		INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+		INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+	xmlns:android
+		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:1:11-69
+uses-permission#android.permission.BLUETOOTH
+ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:8:2-92
+	android:maxSdkVersion
+		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:8:63-89
+	android:name
+		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:8:19-62
+uses-permission#android.permission.BLUETOOTH_ADMIN
+ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:14:2-98
+	android:maxSdkVersion
+		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:14:69-95
+	android:name
+		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:14:19-68
+uses-permission#android.permission.BLUETOOTH_CONNECT
+ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:34:2-73
+	android:name
+		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:34:19-70
+uses-sdk
+INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+		INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml
+		INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml

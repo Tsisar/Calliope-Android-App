@@ -1,0 +1,31 @@
+R_DEF: Internal format may change without notice
+local
+drawable ic_action_notify_cancel
+drawable ic_stat_notify_dfu
+string dfu_action_abort
+string dfu_channel_description
+string dfu_channel_name
+string dfu_status_aborted
+string dfu_status_aborted_msg
+string dfu_status_aborting
+string dfu_status_completed
+string dfu_status_completed_msg
+string dfu_status_connecting
+string dfu_status_connecting_msg
+string dfu_status_disconnecting
+string dfu_status_disconnecting_msg
+string dfu_status_error
+string dfu_status_error_msg
+string dfu_status_foreground_content
+string dfu_status_foreground_title
+string dfu_status_initializing
+string dfu_status_starting
+string dfu_status_starting_msg
+string dfu_status_switching_to_dfu
+string dfu_status_switching_to_dfu_msg
+string dfu_status_uploading
+string dfu_status_uploading_msg
+string dfu_status_uploading_part
+string dfu_status_validating
+string dfu_status_validating_msg
+string dfu_unknown_name
