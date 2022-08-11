@@ -179,6 +179,7 @@ public class DfuService extends DfuBaseService {
 //                    gatt.readCharacteristic(firmwareCharacteristic);
 //                    waitFor(1000);
 //                    String firmware = firmwareCharacteristic.getStringValue(0);
+<<<<<<< HEAD
 //                    loge("Firmware version String = " + firmware);
 //                } else {
 //                    loge("Error Cannot find FIRMWARE_REVISION_UUID");
@@ -194,13 +195,33 @@ public class DfuService extends DfuBaseService {
             BluetoothGattService fps = gatt.getService(MINI_FLASH_SERVICE_UUID);
             if (fps == null) {
                 loge("Error Cannot find MINI_FLASH_SERVICE_UUID");
+=======
+//                    logi("Firmware version String = " + firmware);
+//                } else {
+//                    logi("Error Cannot find FIRMWARE_REVISION_UUID");
+//                }
+//            } else {
+//                logi("Error Cannot find DEVICE_INFORMATION_SERVICE_UUID");
+//            }
+//        }//For Stats purpose only Ends
+
+        if (firstRun) {
+            firstRun = false;
+            BluetoothGattService fps = gatt.getService(MINI_FLASH_SERVICE_UUID);
+            if (fps == null) {
+                logi("Error Cannot find MINI_FLASH_SERVICE_UUID");
+>>>>>>> lib_v2.0.3
                 terminateConnection(gatt, 0);
                 return gatt;
             }
 
             final BluetoothGattCharacteristic sfpc1 = fps.getCharacteristic(MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID);
             if (sfpc1 == null) {
+<<<<<<< HEAD
                 loge("Error Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
+=======
+                logi("Error Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
+>>>>>>> lib_v2.0.3
                 terminateConnection(gatt, 0);
                 return gatt;
             }
@@ -209,16 +230,24 @@ public class DfuService extends DfuBaseService {
             try {
                 logi("Writing Flash Command ....");
                 gatt.writeCharacteristic(sfpc1);
+<<<<<<< HEAD
+=======
+                waitFor(1000);
+>>>>>>> lib_v2.0.3
             } catch (Exception e) {
                 e.printStackTrace();
                 loge(e.getMessage(), e);
             }
+<<<<<<< HEAD
             //Wait for the device to reboot.
             waitUntilDisconnected();
             logi("Refreshing the cache before discoverServices() for Android version " + Build.VERSION.SDK_INT);
             refreshDeviceCache(gatt, true);
         }
 
+=======
+        }
+>>>>>>> lib_v2.0.3
         return gatt;
     }
 
