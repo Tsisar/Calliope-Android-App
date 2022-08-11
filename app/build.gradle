@@ -59,7 +59,7 @@ dependencies {
 
     implementation 'com.github.marlonlom:timeago:3.0.2'
 
-    implementation 'no.nordicsemi.android:dfu:2.0.3'
+    implementation 'no.nordicsemi.android:dfu:2.1.0'
 //    implementation project(':dfuLibrary')
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

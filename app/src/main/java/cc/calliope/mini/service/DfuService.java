@@ -19,6 +19,7 @@ import android.util.Log;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -27,8 +28,6 @@ import cc.calliope.mini.R;
 import cc.calliope.mini.ui.activity.NotificationActivity;
 import no.nordicsemi.android.dfu.DfuBaseService;
 import no.nordicsemi.android.dfu.DfuServiceInitiator;
-
-import static androidx.core.app.NotificationCompat.PRIORITY_MIN;
 
 public class DfuService extends DfuBaseService {
 
@@ -57,32 +56,8 @@ public class DfuService extends DfuBaseService {
             DfuServiceInitiator.createDfuNotificationChannel(getApplicationContext());
         }
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-//            startMyOwnForeground();
-//        else
-//            startForeground(NOTIFICATION_ID, new Notification());
     }
 
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void startMyOwnForeground() {
-        String channelName = "My Background Service";
-        NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_DFU, channelName, NotificationManager.IMPORTANCE_NONE);
-        channel.setLightColor(Color.BLUE);
-        channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        assert manager != null;
-        manager.createNotificationChannel(channel);
-
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_DFU);
-        Notification notification = notificationBuilder.setOngoing(true)
-                .setSmallIcon(R.drawable.ic_mini_app_icon)
-                .setContentTitle("App is running in background")
-                .setPriority(NotificationManager.IMPORTANCE_MAX)
-                .setCategory(Notification.CATEGORY_SERVICE)
-                .build();
-        startForeground(NOTIFICATION_ID, notification);
-    }
 
     @Override
     public void onDestroy() {
@@ -90,15 +65,112 @@ public class DfuService extends DfuBaseService {
     }
 
     @Override
-    protected void updateForegroundNotification(@NonNull final NotificationCompat.Builder builder) {
-        loge("updateForegroundNotification: " + builder);
+    protected void onHandleIntent(@Nullable final Intent intent) {
+        if(flashingWithPairCode(intent) == 0){
+            super.onHandleIntent(intent);
+        }
+    }
+
+    public static final int PROGRESS_SERVICE_NOT_FOUND = -10;
+
+    private int flashingWithPairCode(Intent intent) {
+
+        final String deviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+        final String deviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+
+//        sendLogBroadcast(LOG_LEVEL_VERBOSE, "Connecting to DFU target 2...");
+
+        BluetoothGatt gatt = super.connect(deviceAddress);
+
+        if (gatt == null)
+            return 5;
+
+        logi("Phase2 s");
+
+//        updateProgressNotification(PROGRESS_VALIDATING);
+
+//        //For Stats purpose only
+//        {
+//            BluetoothGattService deviceService = gatt.getService(DEVICE_INFORMATION_SERVICE_UUID);
+//            if (deviceService != null) {
+//                BluetoothGattCharacteristic firmwareCharacteristic = deviceService.getCharacteristic(FIRMWARE_REVISION_UUID);
+//                if (firmwareCharacteristic != null) {
+//                    String firmware = null;
+//                    firmware = readCharacteristicNoFailure(gatt, firmwareCharacteristic);
+//                    logi("Firmware version String = " + firmware);
+//                    sendStatsMiniFirmware(firmware);
+//                } else {
+//                    logi("Error Cannot find FIRMWARE_REVISION_UUID");
+//                }
+//            } else {
+//                logi("Error Cannot find DEVICE_INFORMATION_SERVICE_UUID");
+//            }
+//        }//For Stats purpose only Ends
+
+        int rc = 1;
+
+        BluetoothGattService fps = gatt.getService(MINI_FLASH_SERVICE_UUID);
+        if (fps == null) {
+            logi("Error Cannot find MINI_FLASH_SERVICE_UUID");
+//            sendLogBroadcast(LOG_LEVEL_WARNING, "Upload aborted");
+            terminateConnection(gatt, PROGRESS_SERVICE_NOT_FOUND);
+            return 6;
+        }
+
+        final BluetoothGattCharacteristic sfpc1 = fps.getCharacteristic(MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID);
+        if (sfpc1 == null) {
+            logi("Error Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
+//            sendLogBroadcast(LOG_LEVEL_WARNING, "Upload aborted");
+            terminateConnection(gatt, PROGRESS_SERVICE_NOT_FOUND);
+            return 6;
+        }
+
+        sfpc1.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+        try {
+            logi("Writing Flash Command ....");
+//            writeCharacteristic(gatt, sfpc1);
+            gatt.writeCharacteristic(sfpc1);
+            rc = 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, e.toString());
+        }
+
+        if (rc == 0) {
+//            sendProgressBroadcast(PROGRESS_WAITING_REBOOT);
+            //Wait for the device to reboot.
+            waitUntilDisconnected();
+            waitFor(1600);
+//            waitUntilConnected();
+            logi("Refreshing the cache before discoverServices() for Android version " + Build.VERSION.SDK_INT);
+            refreshDeviceCache(gatt, true);
+
+            /*
+            do {
+                logi("Calling phase 3");
+//                mError = 0;
+                intent = phase3(intent);
+//                resultReceiver = null;
+                gatt.disconnect();
+                waitUntilDisconnected();
+                if (mConnectionState != STATE_CLOSED) {
+                    close(gatt);
+                }
+                gatt = null;
+                logi("End phase 3");
+            } while (intent != null);
+            */
+        }
+
+        logi("Phase2 e");
+        return rc;
     }
 
     @Override
     protected BluetoothGatt connect(@NonNull final String address) {
         BluetoothGatt gatt = super.connect(address);
 
-        //For Stats purpose only
+//        //For Stats purpose only
 //        {
 //            BluetoothGattService deviceService = gatt.getService(DEVICE_INFORMATION_SERVICE_UUID);
 //            if (deviceService != null) {
@@ -115,20 +187,20 @@ public class DfuService extends DfuBaseService {
 //                loge("Error Cannot find DEVICE_INFORMATION_SERVICE_UUID");
 //            }
 //        }
-        //For Stats purpose only Ends
+//        //For Stats purpose only Ends
 
-        if (firstRun) {
+        if (firstRun && false) { //TODO remove it
             firstRun = false;
             BluetoothGattService fps = gatt.getService(MINI_FLASH_SERVICE_UUID);
             if (fps == null) {
-                logi("Error Cannot find MINI_FLASH_SERVICE_UUID");
+                loge("Error Cannot find MINI_FLASH_SERVICE_UUID");
                 terminateConnection(gatt, 0);
                 return gatt;
             }
 
             final BluetoothGattCharacteristic sfpc1 = fps.getCharacteristic(MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID);
             if (sfpc1 == null) {
-                logi("Error Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
+                loge("Error Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
                 terminateConnection(gatt, 0);
                 return gatt;
             }
@@ -136,25 +208,15 @@ public class DfuService extends DfuBaseService {
             sfpc1.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             try {
                 logi("Writing Flash Command ....");
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    loge("ERROR BLUETOOTH_CONNECT permissions DENIED!!!");
-                }
-                //TODO do something with connection state
                 gatt.writeCharacteristic(sfpc1);
-                loge("Start wait");
-                waitFor(1000);
-                loge("Stop wait");
             } catch (Exception e) {
                 e.printStackTrace();
                 loge(e.getMessage(), e);
             }
+            //Wait for the device to reboot.
+            waitUntilDisconnected();
+            logi("Refreshing the cache before discoverServices() for Android version " + Build.VERSION.SDK_INT);
+            refreshDeviceCache(gatt, true);
         }
 
         return gatt;
