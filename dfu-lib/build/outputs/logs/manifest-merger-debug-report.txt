@@ -21,10 +21,18 @@ ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:
 		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:14:69-95
 	android:name
 		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:14:19-68
+uses-permission#android.permission.BLUETOOTH_SCAN
+ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:27:5-73
+	android:name
+		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:27:22-70
 uses-permission#android.permission.BLUETOOTH_CONNECT
 ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:34:2-73
 	android:name
 		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:34:19-70
+uses-permission#android.permission.FOREGROUND_SERVICE
+ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:44:2-74
+	android:name
+		ADDED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml:44:19-71
 uses-sdk
 INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Android\Calliope-Android-App\dfu-lib\src\main\AndroidManifest.xml

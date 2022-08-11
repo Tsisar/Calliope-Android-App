@@ -30,6 +30,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import no.nordicsemi.android.dfu.DfuSettingsConstants;
 import no.nordicsemi.android.dfu.internal.exception.HexFileValidationException;
 
 /**
@@ -54,6 +55,9 @@ public class HexInputStream extends FilterInputStream {
 	private int bytesRead;
 	private final int MBRSize;
 
+    public static final int APP_CODE_BASE_START = 0x18000;
+    public static final int APP_CODE_BASE_END = 0x3BBFF;
+
 	/**
 	 * Creates the HEX Input Stream. The constructor calculates the size of the BIN content which
 	 * is available through {@link #sizeInBytes()}. If HEX file is invalid then the bin size is 0.
@@ -74,7 +78,7 @@ public class HexInputStream extends FilterInputStream {
 		this.lastAddress = 0;
 		this.MBRSize = mbrSize;
 
-		this.available = calculateBinSize(mbrSize);
+		this.available = calculateBinSizeAlternative();
 	}
 
 	/**
@@ -97,7 +101,7 @@ public class HexInputStream extends FilterInputStream {
 		this.lastAddress = 0;
 		this.MBRSize = mbrSize;
 
-		this.available = calculateBinSize(mbrSize);
+		this.available = calculateBinSizeAlternative();
 	}
 
 	@SuppressWarnings("DuplicateThrows")
@@ -169,6 +173,72 @@ public class HexInputStream extends FilterInputStream {
 			in.reset();
 		}
 	}
+
+    private int calculateBinSizeAlternative() throws IOException {
+        int binSize = 0;
+        final InputStream in = this.in;
+        in.mark(in.available());
+
+        int b, lineSize, offset, type;
+        int lastBaseAddress = 0; // last Base Address, default 0
+        int lastAddress;
+        try {
+            b = in.read();
+            while (true) {
+                checkComma(b);
+
+                lineSize = readByte(in); // reading the length of the data in this line
+                offset = readAddress(in);// reading the offset
+                type = readByte(in); // reading the line type
+                switch (type) {
+                    case 0x01:
+                        // end of file
+                        return binSize;
+                    case 0x04: {
+                        // extended linear address record
+                        /*
+                         * The HEX file may contain jump to different addresses. The MSB of LBA (Linear Base Address) is given using the line type 4.
+                         * We only support files where bytes are located together, no jumps are allowed. Therefore the newULBA may be only lastULBA + 1 (or any, if this is the first line of the HEX)
+                         */
+                        final int newULBA = readAddress(in);
+                        if (binSize > 0 && newULBA != (lastBaseAddress >> 16) + 1)
+                            return binSize;
+                        lastBaseAddress = newULBA << 16;
+                        skip(in, 2 /* check sum */);
+                        break;
+                    }
+                    case 0x02: {
+                        // extended segment address record
+                        final int newSBA = readAddress(in) << 4;
+                        if (binSize > 0 && (newSBA >> 16) != (lastBaseAddress >> 16) + 1)
+                            return binSize;
+                        lastBaseAddress = newSBA;
+                        skip(in, 2 /* check sum */);
+                        break;
+                    }
+                    case 0x00:
+                        // data type line
+                        lastAddress = lastBaseAddress + offset;
+                        if (lastAddress >= APP_CODE_BASE_START && lastAddress < APP_CODE_BASE_END)
+                        {
+                            //Log.d("HexInputStrem", "Found FOTA Start address");
+                            binSize += lineSize;
+                        }
+                        // no break!
+                    default:
+                        skip(in, lineSize * 2L /* 2 hex per one byte */+ 2 /* check sum */);
+                        break;
+                }
+                // skip end of line
+                do {
+                    b = in.read();
+                } while (b == '\n' || b == '\r');
+            }
+        } finally {
+            in.reset();
+        }
+    }
+
 
 	@Override
 	public int available() {

@@ -386,6 +386,7 @@ public abstract class DfuBaseService extends IntentService {
 
     public static final int PROGRESS_WAITING_REBOOT = -9;
     /**
+     *
      * The broadcast error message contains the following extras:
      * <ul>
      * <li>{@link #EXTRA_DATA} - the error number. Use {@link GattError#parse(int)} to get String representation</li>

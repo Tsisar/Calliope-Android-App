@@ -103,10 +103,6 @@ id icon
 id icon_group
 id info
 id italic
-id item1
-id item2
-id item3
-id item4
 id line1
 id line3
 id normal
@@ -141,8 +137,6 @@ layout notification_template_custom_big
 layout notification_template_icon_group
 layout notification_template_part_chronometer
 layout notification_template_part_time
-menu example_menu
-menu example_menu2
 string dfu_action_abort
 string dfu_channel_description
 string dfu_channel_name

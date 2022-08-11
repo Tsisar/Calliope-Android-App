@@ -102,10 +102,6 @@ int id icon 0x0
 int id icon_group 0x0
 int id info 0x0
 int id italic 0x0
-int id item1 0x0
-int id item2 0x0
-int id item3 0x0
-int id item4 0x0
 int id line1 0x0
 int id line3 0x0
 int id normal 0x0
@@ -140,8 +136,6 @@ int layout notification_template_custom_big 0x0
 int layout notification_template_icon_group 0x0
 int layout notification_template_part_chronometer 0x0
 int layout notification_template_part_time 0x0
-int menu example_menu 0x0
-int menu example_menu2 0x0
 int string dfu_action_abort 0x0
 int string dfu_channel_description 0x0
 int string dfu_channel_name 0x0

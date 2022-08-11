@@ -23,9 +23,9 @@
      Also, consider adding "neverForLocation" flag if scanning for beacons is nor required.
      With this flag set, the Fine Location permission will not be required.
     -->
-	<!--
-     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    -->
+
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+
 
 	<!--
 	 This permission is required in order to connect to a Bluetooth LE device on Android 12
@@ -40,8 +40,8 @@
 	As foreground service may be disabled, this permission is commented out. Add it to your app
 	if needed.
 	-->
-	<!--
+
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-	-->
+
 
 </manifest>

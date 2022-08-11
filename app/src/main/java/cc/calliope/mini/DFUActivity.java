@@ -37,50 +37,50 @@ public class DFUActivity extends AppCompatActivity {
         @Override
         public void onDeviceConnecting(final String deviceAddress) {
             String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.w(TAG, method);
+            Log.e(TAG, method);
         }
 
         @Override
         public void onDfuProcessStarting(final String deviceAddress) {
             String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.w(TAG, method);
+            Log.e(TAG, method);
         }
 
         @Override
         public void onEnablingDfuMode(final String deviceAddress) {
             String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.w(TAG, method);
+            Log.e(TAG, method);
         }
 
         @Override
         public void onFirmwareValidating(final String deviceAddress) {
             String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.w(TAG, method);
+            Log.e(TAG, method);
         }
 
         @Override
         public void onDeviceDisconnecting(final String deviceAddress) {
             String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.w(TAG, method);
+            Log.e(TAG, method);
         }
 
         @Override
         public void onDfuCompleted(final String deviceAddress) {
             String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.w(TAG, method);
+            Log.e(TAG, method);
 
         }
 
         @Override
         public void onDfuAborted(final String deviceAddress) {
             String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.w(TAG, method);
+            Log.e(TAG, method);
         }
 
         @Override
         public void onProgressChanged(final String deviceAddress, final int percent, final float speed, final float avgSpeed, final int currentPart, final int partsTotal) {
             String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.w(TAG, method + " percent: " + percent);
+            Log.e(TAG, method + " percent: " + percent);
         }
 
         @Override
@@ -142,7 +142,6 @@ public class DFUActivity extends AppCompatActivity {
 
         Log.i("DFUExtra", "Start Flashing");
 
-
         final DfuServiceInitiator starter = new DfuServiceInitiator(device.getAddress())
                 .setDeviceName(device.getName())
                 .setMbrSize(0x18000)
@@ -150,8 +149,8 @@ public class DFUActivity extends AppCompatActivity {
 //                .setForeground(false)
                 .setKeepBond(false);
 
+//        starter.createDfuNotificationChannel(this);
         starter.setBinOrHex(DfuBaseService.TYPE_APPLICATION, file);
-
         starter.start(this, DfuService.class);
     }
 
