@@ -8,5 +8,5 @@ public final class BuildConfig {
   public static final String LIBRARY_PACKAGE_NAME = "no.nordicsemi.android.dfu";
   public static final String BUILD_TYPE = "debug";
   // Field from build type: debug
-  public static final String VERSION_NAME = "2.0.3m";
+  public static final String VERSION_NAME = "2.1.0 M debug";
 }

@@ -61,7 +61,7 @@ public class editorAcitvity extends AppCompatActivity {
         webview.setWebViewClient(new WebViewClient());
         webview.getSettings().setJavaScriptEnabled(true);
 
-        webview.getSettings().setJavaScriptEnabled(true);
+//        webview.getSettings().setJavaScriptEnabled(true);
 
         webview.getSettings().setDomStorageEnabled(true);
 

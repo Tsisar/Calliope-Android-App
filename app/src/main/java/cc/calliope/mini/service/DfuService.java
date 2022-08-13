@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import cc.calliope.mini.BuildConfig;
 import cc.calliope.mini.R;
 import cc.calliope.mini.ui.activity.NotificationActivity;
@@ -40,9 +41,6 @@ public class DfuService extends DfuBaseService {
     private static final UUID MINI_FLASH_SERVICE_UUID = UUID.fromString("E95D93B0-251D-470A-A062-FA1922DFA9A8");
     private static final UUID MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID = UUID.fromString("E95D93B1-251D-470A-A062-FA1922DFA9A8");
 
-    private boolean firstRun = true;
-
-
     @Override
     protected Class<? extends Activity> getNotificationTarget() {
         return NotificationActivity.class;
@@ -58,7 +56,6 @@ public class DfuService extends DfuBaseService {
 
     }
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -66,28 +63,33 @@ public class DfuService extends DfuBaseService {
 
     @Override
     protected void onHandleIntent(@Nullable final Intent intent) {
-            if(flashingWithPairCode(intent) == 0){
-                super.onHandleIntent(intent);
+        assert intent != null;
+
+        BluetoothGatt gatt = flashingWithPairCode(intent);
+        if (gatt != null) {
+            super.onHandleIntent(intent);
+
+            gatt.disconnect();
+            waitUntilDisconnected();
+            if (mConnectionState != STATE_CLOSED) {
+                close(gatt);
             }
+        }
     }
 
     public static final int PROGRESS_SERVICE_NOT_FOUND = -10;
 
-    private int flashingWithPairCode(Intent intent) {
-
+    private  BluetoothGatt flashingWithPairCode(Intent intent) {
         final String deviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
-        final String deviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+        final long delay = intent.getLongExtra(DfuBaseService.EXTRA_SCAN_DELAY, 0);
 
-//        sendLogBroadcast(LOG_LEVEL_VERBOSE, "Connecting to DFU target 2...");
+//        sendLogBroadcast(LOG_LEVEL_VERBOSE, "Connecting to DFU target 2...", deviceAddress);
 
         BluetoothGatt gatt = super.connect(deviceAddress);
-
-        if (gatt == null)
-            return 5;
-
-        logi("Phase2 s");
-
-//        updateProgressNotification(PROGRESS_VALIDATING);
+        if (gatt == null) {
+            loge("Bluetooth adapter disabled");
+            return gatt;
+        }
 
 //        //For Stats purpose only
 //        {
@@ -107,143 +109,68 @@ public class DfuService extends DfuBaseService {
 //            }
 //        }//For Stats purpose only Ends
 
-        int rc = 1;
-
         BluetoothGattService fps = gatt.getService(MINI_FLASH_SERVICE_UUID);
         if (fps == null) {
-            logi("Error Cannot find MINI_FLASH_SERVICE_UUID");
+            loge("Error Cannot find MINI_FLASH_SERVICE_UUID");
 //            sendLogBroadcast(LOG_LEVEL_WARNING, "Upload aborted");
             terminateConnection(gatt, PROGRESS_SERVICE_NOT_FOUND);
-            return 6;
+            return null;
         }
 
         final BluetoothGattCharacteristic sfpc1 = fps.getCharacteristic(MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID);
         if (sfpc1 == null) {
-            logi("Error Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
+            loge("Error Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
 //            sendLogBroadcast(LOG_LEVEL_WARNING, "Upload aborted");
             terminateConnection(gatt, PROGRESS_SERVICE_NOT_FOUND);
-            return 6;
+            return null;
         }
 
         sfpc1.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
         try {
             logi("Writing Flash Command ....");
+            long timeStart = System.currentTimeMillis();
 //            writeCharacteristic(gatt, sfpc1);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                return null;
+            }
             gatt.writeCharacteristic(sfpc1);
-            rc = 0;
+            long time = System.currentTimeMillis() - timeStart;
+            loge("Write characteristic time: " + time);
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG, e.toString());
+            loge(e.toString());
+            return null;
         }
 
-        if (rc == 0) {
-//            sendProgressBroadcast(PROGRESS_WAITING_REBOOT);
-            //Wait for the device to reboot.
-            waitUntilDisconnected();
-            waitFor(1600);
-//            waitUntilConnected();
-            logi("Refreshing the cache before discoverServices() for Android version " + Build.VERSION.SDK_INT);
-            refreshDeviceCache(gatt, true);
+        //Wait for the device to reboot.
+        waitUntilDisconnected();
+        long timeStart = System.currentTimeMillis();
+        waitFor(delay);
+        long time = System.currentTimeMillis() - timeStart;
+        loge("Restart wait for: " + time);
 
-            /*
-            do {
-                logi("Calling phase 3");
-//                mError = 0;
-                intent = phase3(intent);
-//                resultReceiver = null;
-                gatt.disconnect();
-                waitUntilDisconnected();
-                if (mConnectionState != STATE_CLOSED) {
-                    close(gatt);
-                }
-                gatt = null;
-                logi("End phase 3");
-            } while (intent != null);
-            */
-        }
-
-        logi("Phase2 e");
-        return rc;
-    }
-
-    @Override
-    protected BluetoothGatt connect(@NonNull final String address) {
-        BluetoothGatt gatt = super.connect(address);
-
-//        //For Stats purpose only
-//        {
-//            BluetoothGattService deviceService = gatt.getService(DEVICE_INFORMATION_SERVICE_UUID);
-//            if (deviceService != null) {
-//                BluetoothGattCharacteristic firmwareCharacteristic = deviceService.getCharacteristic(FIRMWARE_REVISION_UUID);
-//                if (firmwareCharacteristic != null) {
-//                    gatt.readCharacteristic(firmwareCharacteristic);
-//                    waitFor(1000);
-//                    String firmware = firmwareCharacteristic.getStringValue(0);
-//                    loge("Firmware version String = " + firmware);
-//                } else {
-//                    loge("Error Cannot find FIRMWARE_REVISION_UUID");
-//                }
-//            } else {
-//                loge("Error Cannot find DEVICE_INFORMATION_SERVICE_UUID");
-//            }
-//        }
-//        //For Stats purpose only Ends
-
-        if (firstRun && false) { //TODO remove it
-            firstRun = false;
-            BluetoothGattService fps = gatt.getService(MINI_FLASH_SERVICE_UUID);
-            if (fps == null) {
-                loge("Error Cannot find MINI_FLASH_SERVICE_UUID");
-                terminateConnection(gatt, 0);
-                return gatt;
-            }
-
-            final BluetoothGattCharacteristic sfpc1 = fps.getCharacteristic(MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID);
-            if (sfpc1 == null) {
-                loge("Error Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
-                terminateConnection(gatt, 0);
-                return gatt;
-            }
-
-            sfpc1.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-            try {
-                logi("Writing Flash Command ....");
-                gatt.writeCharacteristic(sfpc1);
-            } catch (Exception e) {
-                e.printStackTrace();
-                loge(e.getMessage(), e);
-            }
-            //Wait for the device to reboot.
-            waitUntilDisconnected();
-            logi("Refreshing the cache before discoverServices() for Android version " + Build.VERSION.SDK_INT);
-            refreshDeviceCache(gatt, true);
-        }
-
+        logi("Refreshing the cache before discoverServices() for Android version " + Build.VERSION.SDK_INT);
+        refreshDeviceCache(gatt, true);
         return gatt;
     }
+
 
     @Override
     protected boolean isDebug() {
         // Here return true if you want the service to print more logs in LogCat.
         // Library's BuildConfig in current version of Android Studio is always set to DEBUG=false, so
         // make sure you return true or your.app.BuildConfig.DEBUG here.
-        return BuildConfig.DEBUG;
+        return DEBUG;
     }
 
     private void loge(final String message) {
-        if (DEBUG) {
+        if (isDebug()) {
             Log.e(TAG, "### " + Thread.currentThread().getId() + " # " + message);
         }
     }
 
-    private void loge(final String message, final Throwable e) {
-        if (DEBUG) {
-            Log.e(TAG, "### " + Thread.currentThread().getId() + " # " + message, e);
-        }
-    }
-
     private void logi(final String message) {
-        if (DEBUG) {
+        if (isDebug()) {
             Log.i(TAG, "### " + Thread.currentThread().getId() + " # " + message);
         }
     }

@@ -1,22 +1,17 @@
 package cc.calliope.mini;
 
 import android.Manifest;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.util.Log;
+import android.widget.TextView;
 
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import cc.calliope.mini.adapter.ExtendedBluetoothDevice;
 import cc.calliope.mini.service.DfuService;
 
@@ -25,66 +20,78 @@ import no.nordicsemi.android.dfu.DfuProgressListener;
 import no.nordicsemi.android.dfu.DfuProgressListenerAdapter;
 import no.nordicsemi.android.dfu.DfuServiceInitiator;
 import no.nordicsemi.android.dfu.DfuServiceListenerHelper;
-import no.nordicsemi.android.dfu.DfuSettingsConstants;
-
-import static no.nordicsemi.android.dfu.DfuBaseService.NOTIFICATION_CHANNEL_DFU;
 
 public class DFUActivity extends AppCompatActivity {
+
+    private TextView deviceInfo;
+    private TextView timerText;
 
     private static final String TAG = DFUActivity.class.getSimpleName();
 
     private final DfuProgressListener mDfuProgressListener = new DfuProgressListenerAdapter() {
         @Override
         public void onDeviceConnecting(final String deviceAddress) {
-            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.e(TAG, method);
+            timerText.setText("Device Connecting");
+//            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
+//            Log.e(TAG, method);
         }
 
         @Override
         public void onDfuProcessStarting(final String deviceAddress) {
-            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.e(TAG, method);
+            timerText.setText("Process Starting");
+//            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
+//            Log.e(TAG, method);
         }
 
         @Override
         public void onEnablingDfuMode(final String deviceAddress) {
-            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.e(TAG, method);
+            timerText.setText("Enabling Dfu Mode");
+//            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
+//            Log.e(TAG, method);
         }
 
         @Override
         public void onFirmwareValidating(final String deviceAddress) {
-            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.e(TAG, method);
+            timerText.setText("Firmware Validating");
+//            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
+//            Log.e(TAG, method);
         }
 
         @Override
         public void onDeviceDisconnecting(final String deviceAddress) {
-            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.e(TAG, method);
+            timerText.setText("Device Disconnecting");
+//            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
+//            Log.e(TAG, method);
         }
 
         @Override
         public void onDfuCompleted(final String deviceAddress) {
-            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.e(TAG, method);
-
+            timerText.setText("Dfu Completed");
+            finish();
+//            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
+//            Log.e(TAG, method);
         }
 
         @Override
         public void onDfuAborted(final String deviceAddress) {
-            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.e(TAG, method);
+            timerText.setText("Dfu Aborted");
+//            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
+//            Log.e(TAG, method);
         }
 
         @Override
         public void onProgressChanged(final String deviceAddress, final int percent, final float speed, final float avgSpeed, final int currentPart, final int partsTotal) {
-            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
-            Log.e(TAG, method + " percent: " + percent);
+            deviceInfo.setText(percent + "%");
+            timerText.setText(R.string.info_text_uploading);
+
+//            String method = Thread.currentThread().getStackTrace()[2].getMethodName();
+//            Log.e(TAG, method + " percent: " + percent);
         }
 
         @Override
         public void onError(final String deviceAddress, final int error, final int errorType, final String message) {
+            deviceInfo.setText("ERROR:");
+            timerText.setText(message);
             String method = Thread.currentThread().getStackTrace()[2].getMethodName();
             Log.e(TAG, method + " error: " + message);
         }
@@ -94,6 +101,11 @@ public class DFUActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dfu);
+
+        deviceInfo = findViewById(R.id.statusInfo);
+        timerText = findViewById(R.id.timerText);
+
+        timerText.setText("Device Connecting");
 
         initiateFlashing();
     }
@@ -111,8 +123,6 @@ public class DFUActivity extends AppCompatActivity {
 
         DfuServiceListenerHelper.unregisterProgressListener(this, mDfuProgressListener);
     }
-
-
 
     /**
      * Prepares for flashing process.
@@ -139,38 +149,34 @@ public class DFUActivity extends AppCompatActivity {
         Log.i("DFUExtra", "mPairingCode: " + 0);
         Log.i("DFUExtra", "MIME_TYPE_OCTET_STREAM: " + DfuService.MIME_TYPE_OCTET_STREAM);
         Log.i("DFUExtra", "filePath: " + file);
-
         Log.i("DFUExtra", "Start Flashing");
+        Log.i("DFUExtra", "ForegroundPermissionGranted: " + foregroundPermissionGranted());
 
         final DfuServiceInitiator starter = new DfuServiceInitiator(device.getAddress())
                 .setDeviceName(device.getName())
-                .setMbrSize(0x18000)
-//                .setForeground(checkForegroundPermission())
-//                .setForeground(false)
+                .setMbrSize(0x18000) //TODO Modify HexInputStream
+                //TODO  Android Oreo or newer may kill a background service few moments after user closes the application.
+                // Consider enabling foreground service
+                // Bud some time we have exception:
+                // android.app.ForegroundServiceDidNotStartInTimeException: Context.startForegroundService() did not then call Service.startForeground()
+                .setForeground(false)
+//                .setForeground(foregroundPermissionGranted())
+                .setNumberOfRetries(3)
+                .setRebootTime(1000)
                 .setKeepBond(false);
 
-//        starter.createDfuNotificationChannel(this);
+        //TODO
+        // Reboot after fw download
+
         starter.setBinOrHex(DfuBaseService.TYPE_APPLICATION, file);
         starter.start(this, DfuService.class);
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private void createNotificationChannel(NotificationManager notificationManager){
-        String channelName = "My Foreground Service";
-        NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_DFU, channelName, NotificationManager.IMPORTANCE_HIGH);
-        // omitted the LED color
-        channel.setImportance(NotificationManager.IMPORTANCE_NONE);
-        channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-        notificationManager.createNotificationChannel(channel);
-    }
-
-    private boolean checkForegroundPermission(){
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.FOREGROUND_SERVICE) != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "FOREGROUND_SERVICE permission denied");
-            return false;
+    private boolean foregroundPermissionGranted(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            return ActivityCompat.checkSelfPermission(this, Manifest.permission.FOREGROUND_SERVICE) == PackageManager.PERMISSION_GRANTED;
         }
-        Log.e(TAG, "FOREGROUND_SERVICE permission allowed");
-        return true;
+        return false;
     }
 
 }

@@ -14,12 +14,12 @@ android {
         debug {
             minifyEnabled false
             consumerProguardFiles 'dfu-proguard-rules.pro'
-            buildConfigField("String", "VERSION_NAME", "\"2.0.3m\"")
+            buildConfigField("String", "VERSION_NAME", "\"2.1.0 M debug\"")
         }
         release {
             minifyEnabled false
             consumerProguardFiles 'dfu-proguard-rules.pro'
-            buildConfigField("String", "VERSION_NAME", "\"2.0.3m\"")
+            buildConfigField("String", "VERSION_NAME", "\"2.1.0 M\"")
         }
     }
 }
