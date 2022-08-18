@@ -2040,29 +2040,6 @@ public abstract class DfuBaseService extends IntentService implements DfuProgres
 		return true;
 	}
 
-    protected void writeCharacteristic(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) throws UploadAbortedException {
-
-        gatt.writeCharacteristic(characteristic);
-
-        // We have to wait for confirmation
-        try {
-            synchronized (mLock) {
-                while (mConnectionState == STATE_CONNECTED_AND_READY && mError == 0 && !mAborted) {
-                    loge("mConnectionState: " + mConnectionState);
-                    loge("mError: " + mError);
-                    loge("mAborted: " + mAborted);
-                    mLock.wait();
-                }
-            }
-        } catch (final InterruptedException e) {
-            loge("Sleeping interrupted", e);
-        }
-
-        if (mAborted) {
-            throw new UploadAbortedException();
-        }
-    }
-
 	private void loge(final String message) {
 		Log.e(TAG, message);
 	}

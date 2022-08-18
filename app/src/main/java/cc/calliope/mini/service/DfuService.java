@@ -2,30 +2,20 @@ package cc.calliope.mini.service;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.Build;
 import android.util.Log;
 
 import java.util.UUID;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import cc.calliope.mini.BuildConfig;
-import cc.calliope.mini.R;
 import cc.calliope.mini.ui.activity.NotificationActivity;
 import no.nordicsemi.android.dfu.DfuBaseService;
 import no.nordicsemi.android.dfu.DfuServiceInitiator;
@@ -35,11 +25,13 @@ public class DfuService extends DfuBaseService {
     private static final String TAG = "DfuService";
     private static final boolean DEBUG = BuildConfig.DEBUG;
 
-    private static final UUID DEVICE_INFORMATION_SERVICE_UUID = new UUID(0x0000180A00001000L, 0x800000805F9B34FBL);
-    private static final UUID FIRMWARE_REVISION_UUID = new UUID(0x00002A2600001000L, 0x800000805F9B34FBL);
+//    private static final UUID DEVICE_INFORMATION_SERVICE_UUID = new UUID(0x0000180A00001000L, 0x800000805F9B34FBL);
+//    private static final UUID FIRMWARE_REVISION_UUID = new UUID(0x00002A2600001000L, 0x800000805F9B34FBL);
 
     private static final UUID MINI_FLASH_SERVICE_UUID = UUID.fromString("E95D93B0-251D-470A-A062-FA1922DFA9A8");
     private static final UUID MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID = UUID.fromString("E95D93B1-251D-470A-A062-FA1922DFA9A8");
+
+//    private LocalBroadcastManager mBroadcastManager;
 
     @Override
     protected Class<? extends Activity> getNotificationTarget() {
@@ -49,6 +41,8 @@ public class DfuService extends DfuBaseService {
     @Override
     public void onCreate() {
         super.onCreate();
+//        mBroadcastManager = LocalBroadcastManager.getInstance(this);
+
         // Enable Notification Channel for Android OREO
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             DfuServiceInitiator.createDfuNotificationChannel(getApplicationContext());
@@ -64,31 +58,23 @@ public class DfuService extends DfuBaseService {
     @Override
     protected void onHandleIntent(@Nullable final Intent intent) {
         assert intent != null;
-
-        BluetoothGatt gatt = flashingWithPairCode(intent);
-        if (gatt != null) {
-            super.onHandleIntent(intent);
-
-            gatt.disconnect();
-            waitUntilDisconnected();
-            if (mConnectionState != STATE_CLOSED) {
-                close(gatt);
-            }
+        if (!flashingWithPairCode(intent)) {
+            loge("The calliope over the air firmware update not Initialized");
+//            abort();
         }
+        super.onHandleIntent(intent);
     }
 
     public static final int PROGRESS_SERVICE_NOT_FOUND = -10;
 
-    private  BluetoothGatt flashingWithPairCode(Intent intent) {
+    private boolean flashingWithPairCode(Intent intent) {
         final String deviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
         final long delay = intent.getLongExtra(DfuBaseService.EXTRA_SCAN_DELAY, 0);
 
-//        sendLogBroadcast(LOG_LEVEL_VERBOSE, "Connecting to DFU target 2...", deviceAddress);
-
         BluetoothGatt gatt = super.connect(deviceAddress);
         if (gatt == null) {
-            loge("Bluetooth adapter disabled");
-            return gatt;
+            logw("Bluetooth adapter disabled");
+            return false;
         }
 
 //        //For Stats purpose only
@@ -109,49 +95,44 @@ public class DfuService extends DfuBaseService {
 //            }
 //        }//For Stats purpose only Ends
 
-        BluetoothGattService fps = gatt.getService(MINI_FLASH_SERVICE_UUID);
-        if (fps == null) {
-            loge("Error Cannot find MINI_FLASH_SERVICE_UUID");
-//            sendLogBroadcast(LOG_LEVEL_WARNING, "Upload aborted");
+        BluetoothGattService flashService = gatt.getService(MINI_FLASH_SERVICE_UUID);
+        if (flashService == null) {
+            logw("Cannot find MINI_FLASH_SERVICE_UUID");
             terminateConnection(gatt, PROGRESS_SERVICE_NOT_FOUND);
-            return null;
+            return false;
         }
 
-        final BluetoothGattCharacteristic sfpc1 = fps.getCharacteristic(MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID);
-        if (sfpc1 == null) {
-            loge("Error Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
-//            sendLogBroadcast(LOG_LEVEL_WARNING, "Upload aborted");
+        final BluetoothGattCharacteristic flashServiceCharacteristic = flashService.getCharacteristic(MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID);
+        if (flashServiceCharacteristic == null) {
+            logw("Cannot find MINI_FLASH_SERVICE_CONTROL_CHARACTERISTIC_UUID");
             terminateConnection(gatt, PROGRESS_SERVICE_NOT_FOUND);
-            return null;
+            return false;
         }
 
-        sfpc1.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+        flashServiceCharacteristic.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
         try {
-            logi("Writing Flash Command ....");
-            long timeStart = System.currentTimeMillis();
+            logi("Writing Flash Command...");
 //            writeCharacteristic(gatt, sfpc1);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                return null;
+                logw("Permission BLUETOOTH_CONNECT not granted");
             }
-            gatt.writeCharacteristic(sfpc1);
-            long time = System.currentTimeMillis() - timeStart;
-            loge("Write characteristic time: " + time);
+            gatt.writeCharacteristic(flashServiceCharacteristic);
         } catch (Exception e) {
             e.printStackTrace();
             loge(e.toString());
-            return null;
+            terminateConnection(gatt, PROGRESS_SERVICE_NOT_FOUND);
+            return false;
         }
 
         //Wait for the device to reboot.
+        logi("Wait for the device to reboot");
         waitUntilDisconnected();
-        long timeStart = System.currentTimeMillis();
         waitFor(delay);
-        long time = System.currentTimeMillis() - timeStart;
-        loge("Restart wait for: " + time);
 
         logi("Refreshing the cache before discoverServices() for Android version " + Build.VERSION.SDK_INT);
         refreshDeviceCache(gatt, true);
-        return gatt;
+
+        return true;
     }
 
 
@@ -163,9 +144,21 @@ public class DfuService extends DfuBaseService {
         return DEBUG;
     }
 
+//    public void abort() {
+//        final Intent pauseAction = new Intent(DfuBaseService.BROADCAST_ACTION);
+//        pauseAction.putExtra(DfuBaseService.EXTRA_ACTION, DfuBaseService.ACTION_ABORT);
+//        mBroadcastManager.sendBroadcast(pauseAction);
+//    }
+
     private void loge(final String message) {
         if (isDebug()) {
             Log.e(TAG, "### " + Thread.currentThread().getId() + " # " + message);
+        }
+    }
+
+    private void logw(final String message) {
+        if (isDebug()) {
+            Log.w(TAG, "### " + Thread.currentThread().getId() + " # " + message);
         }
     }
 
