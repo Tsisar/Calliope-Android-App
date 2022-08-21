@@ -1,14 +1,22 @@
 package cc.calliope.mini;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentManager;
 import cc.calliope.mini.adapter.ExtendedBluetoothDevice;
+import cc.calliope.mini.dialog.PatternDialogFragment;
+import cc.calliope.mini.utils.Utils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -16,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         final Intent intent = getIntent();
         final ExtendedBluetoothDevice device = intent.getParcelableExtra("cc.calliope.mini.EXTRA_DEVICE");
@@ -51,8 +60,9 @@ public class MainActivity extends AppCompatActivity {
         button_scanner.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final Intent intent = new Intent(MainActivity.this, ScannerActivity.class);
-                startActivity(intent);
+//                final Intent intent = new Intent(MainActivity.this, ScannerActivity.class);
+//                startActivity(intent);
+                showPatternDialog();
             }
         });
 
@@ -61,9 +71,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 final Intent intent = new Intent(MainActivity.this, editorAcitvity.class);
-                if(device != null) intent.putExtra("cc.calliope.mini.EXTRA_DEVICE", device);
+                if (device != null) intent.putExtra("cc.calliope.mini.EXTRA_DEVICE", device);
                 intent.putExtra("TARGET_NAME", "BIBLIOTHEK");
-                intent.putExtra("TARGET_URL", getString(R.string.start_programm_url) );
+                intent.putExtra("TARGET_URL", getString(R.string.start_programm_url));
                 startActivity(intent);
             }
         });
@@ -73,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 final Intent intent = new Intent(MainActivity.this, selectEditorActivity.class);
-                if(device != null) intent.putExtra("cc.calliope.mini.EXTRA_DEVICE", device);
+                if (device != null) intent.putExtra("cc.calliope.mini.EXTRA_DEVICE", device);
                 startActivity(intent);
             }
         });
@@ -83,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 final Intent intent = new Intent(MainActivity.this, myCodeActivity.class);
-                if(device != null) intent.putExtra("cc.calliope.mini.EXTRA_DEVICE", device);
+                if (device != null) intent.putExtra("cc.calliope.mini.EXTRA_DEVICE", device);
                 startActivity(intent);
             }
         });
@@ -92,16 +102,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void foo() {
- //       final Intent intent = new Intent(this, ScannerActivity.class);
+        //       final Intent intent = new Intent(this, ScannerActivity.class);
 //        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-  //      startActivity(intent);
+        //      startActivity(intent);
     }
 
+    private void showPatternDialog() {
+//        Bundle bundle = new Bundle();
+//        bundle.putString("TEXT","TEST TEXT");
 
+        FragmentManager parentFragmentManager = getSupportFragmentManager();
+//        parentFragmentManager.setFragmentResultListener("pattern", getViewLifecycleOwner(), this);
+        PatternDialogFragment patternDialogFragment = PatternDialogFragment.newInstance("Some Pattern");
+//        patternDialogFragment.setArguments(bundle);
 
+        patternDialogFragment.show(parentFragmentManager, "fragment_pattern");
 
+    }
 
+    //TODO We must check permission when application start
+    private void checkPermission() {
 
-
-
+    }
 }

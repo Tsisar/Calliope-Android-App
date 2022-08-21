@@ -3,8 +3,11 @@ package cc.calliope.mini;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.StrictMode;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -15,6 +18,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,8 +30,17 @@ import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 
+import androidx.lifecycle.ViewModelProvider;
 import cc.calliope.mini.adapter.ExtendedBluetoothDevice;
+import cc.calliope.mini.utils.Utils;
+import cc.calliope.mini.viewmodels.ScannerLiveData;
+import cc.calliope.mini.viewmodels.ScannerViewModel;
 
 public class editorAcitvity extends AppCompatActivity {
 
@@ -108,17 +121,16 @@ public class editorAcitvity extends AppCompatActivity {
 
                 Uri uri = Uri.parse(url);
                 Log.i("URL", url);
-                Log.i("URI", ""+uri);
+                Log.i("URI", "" + uri);
 
                 //String filetype = url.substring(url.indexOf("/") + 1, url.indexOf(";"));
-                String filename = editorName+"-"+System.currentTimeMillis() + ".hex";
+                String filename = editorName + "-" + System.currentTimeMillis() + ".hex";
                 File file = new File(getFilesDir() + File.separator + filename);
                 if (file.exists())
                     file.delete();
                 try {
                     file.createNewFile();
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     Log.w("CreateFile", "Error writing " + file);
                 }
@@ -144,14 +156,14 @@ public class editorAcitvity extends AppCompatActivity {
                     intent.putExtra("cc.calliope.mini.EXTRA_DEVICE", device);
                     intent.putExtra("EXTRA_FILE", file.getAbsolutePath());
                     startActivity(intent);
-                } else if(downloadResult) {
+                } else if (downloadResult) {
                     Toast.makeText(getApplicationContext(), R.string.upload_no_mini_connected, Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(getApplicationContext(), R.string.download_error, Toast.LENGTH_LONG).show();
                 }
             }
         });
-}
+    }
 
 
     public Boolean createAndSaveFileFromBase64Url(String url, File file) {
@@ -208,8 +220,7 @@ public class editorAcitvity extends AppCompatActivity {
             outStream.flush();
             outStream.close();
             inStream.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }

@@ -41,6 +41,9 @@ import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Objects;
+
+import androidx.annotation.NonNull;
 import cc.calliope.mini.R;
 import no.nordicsemi.android.support.v18.scanner.ScanResult;
 
@@ -124,7 +127,18 @@ public class ExtendedBluetoothDevice implements Parcelable {
 		return super.equals(o);
 	}
 
-	// Parcelable implementation
+    @Override
+    public int hashCode() {
+        return Objects.hash(device.getAddress());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return device.getAddress() + " " + pattern;
+    }
+
+    // Parcelable implementation
 
 	private ExtendedBluetoothDevice(final Parcel in) {
 		this.device = in.readParcelable(BluetoothDevice.class.getClassLoader());
