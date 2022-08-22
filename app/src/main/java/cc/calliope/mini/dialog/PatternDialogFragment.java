@@ -1,7 +1,7 @@
 package cc.calliope.mini.dialog;
 
-import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -18,19 +17,20 @@ import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 import cc.calliope.mini.R;
 import cc.calliope.mini.adapter.ExtendedBluetoothDevice;
-import cc.calliope.mini.databinding.FragmentPatternBinding;
+import cc.calliope.mini.databinding.LayoutPatternDialogBinding;
 import cc.calliope.mini.utils.Utils;
 import cc.calliope.mini.viewmodels.ScannerLiveData;
 import cc.calliope.mini.viewmodels.ScannerViewModel;
 
 public class PatternDialogFragment extends DialogFragment {
 
-    private FragmentPatternBinding binding;
-    private final List<String> patternList = Arrays.asList("0", "0", "0", "0", "0");
+    private LayoutPatternDialogBinding binding;
+    private final List<String> patternList = Arrays.asList("X", "X", "X", "X", "X");
 
     private ScannerViewModel mScannerViewModel;
     private final LinkedHashSet<ExtendedBluetoothDevice> devices = new LinkedHashSet<>();
@@ -54,7 +54,7 @@ public class PatternDialogFragment extends DialogFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        binding = FragmentPatternBinding.inflate(inflater, container, false);
+        binding = LayoutPatternDialogBinding.inflate(inflater, container, false);
         // Create view model containing utility methods for scanning
         mScannerViewModel = new ViewModelProvider(this).get(ScannerViewModel.class);
         mScannerViewModel.getScannerState().observe(this, this::startScan);
@@ -65,6 +65,10 @@ public class PatternDialogFragment extends DialogFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        if (getDialog() != null){
+            getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
 
         Bundle bundle = getArguments();
         if (bundle != null) {
@@ -77,13 +81,13 @@ public class PatternDialogFragment extends DialogFragment {
 //        binding.patternD.setPattern(1);
 //        binding.patternE.setPattern(2);
 
-        binding.patternA.setOnRatingBarChangeListener((ratingBar, v, b) -> onPatternChange(0, v));
-        binding.patternB.setOnRatingBarChangeListener((ratingBar, v, b) -> onPatternChange(1, v));
-        binding.patternC.setOnRatingBarChangeListener((ratingBar, v, b) -> onPatternChange(2, v));
-        binding.patternD.setOnRatingBarChangeListener((ratingBar, v, b) -> onPatternChange(3, v));
-        binding.patternE.setOnRatingBarChangeListener((ratingBar, v, b) -> onPatternChange(4, v));
+        binding.patternMatrix.patternA.setOnRatingBarChangeListener((ratingBar, v, b) -> onPatternChange(0, v));
+        binding.patternMatrix.patternB.setOnRatingBarChangeListener((ratingBar, v, b) -> onPatternChange(1, v));
+        binding.patternMatrix.patternC.setOnRatingBarChangeListener((ratingBar, v, b) -> onPatternChange(2, v));
+        binding.patternMatrix.patternD.setOnRatingBarChangeListener((ratingBar, v, b) -> onPatternChange(3, v));
+        binding.patternMatrix.patternE.setOnRatingBarChangeListener((ratingBar, v, b) -> onPatternChange(4, v));
 
-        binding.buttonOk.setOnClickListener(view1 -> sendBackResult());
+        binding.buttonAction.setOnClickListener(view1 -> sendBackResult());
     }
 
     // Call this method to send the data back to the parent fragment
@@ -107,14 +111,10 @@ public class PatternDialogFragment extends DialogFragment {
 
     private void onPatternChange(int index, float newPatten) {
         patternList.set(index, Pattern.forCode(newPatten).toString());
-        if(getDeviceByPattern(patternList) != null){
-            binding.buttonOk.setBackgroundColor(getResources().getColor(R.color.green));
-        }else {
-            binding.buttonOk.setBackgroundColor(getResources().getColor(R.color.lightgrey));
-        }
     }
 
     enum Pattern {
+        X(0f),
         ZU(1f),
         VO(2f),
         GI(3f),
@@ -174,6 +174,12 @@ public class PatternDialogFragment extends DialogFragment {
                 Log.v("DIALOG: ", "Start scanning");
                 mScannerViewModel.startScan();
                 devices.addAll(state.getDevices());
+
+                if (getDeviceByPattern(patternList) != null) {
+                    binding.buttonAction.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.btn_connect_green, null));
+                } else {
+                    binding.buttonAction.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.btn_connect_aqua, null));
+                }
 
                 for (ExtendedBluetoothDevice device : devices) {
                     Log.i("DIALOG: ", "Device: " + device.getName() + " " + device.getAddress());

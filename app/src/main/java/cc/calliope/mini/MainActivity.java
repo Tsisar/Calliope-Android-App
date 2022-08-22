@@ -1,6 +1,7 @@
 package cc.calliope.mini;
 
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -115,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
 //        parentFragmentManager.setFragmentResultListener("pattern", getViewLifecycleOwner(), this);
         PatternDialogFragment patternDialogFragment = PatternDialogFragment.newInstance("Some Pattern");
 //        patternDialogFragment.setArguments(bundle);
+
 
         patternDialogFragment.show(parentFragmentManager, "fragment_pattern");
 
